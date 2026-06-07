@@ -29,15 +29,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
 
       - name: Install dependencies
         working-directory: frontend
-        run: |
-          npm install -g npm@10
-          npm install --no-audit --no-fund
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build website
         working-directory: frontend
@@ -48,7 +49,7 @@ jobs:
           VITE_STUDIO_EMAIL: ${{ secrets.VITE_STUDIO_EMAIL }}
           VITE_FACEBOOK_URL: ${{ secrets.VITE_FACEBOOK_URL }}
           VITE_INSTAGRAM_URL: ${{ secrets.VITE_INSTAGRAM_URL }}
-        run: npm run build
+        run: pnpm run build
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

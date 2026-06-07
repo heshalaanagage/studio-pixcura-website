@@ -1,0 +1,14 @@
+STUDIO PIXCURA ADMIN V4 - PHOTO COUNT + HOME PACKAGES FIX
+
+Fixed:
+1. Album photo upload now saves photo records with safe sort_order values.
+2. Uploaded photo filenames are now unique, so repeated names like IMG_001.jpg will not fail.
+3. Admin Albums list now shows photo count and small uploaded photo thumbnails.
+4. Photo count is loaded from photos table and will update after upload.
+5. Home page packages are now shown category-wise.
+6. Clicking a package category shows the Basic / Standard / Signature / Pro / Premium / Luxury package details separately.
+7. schema.sql/RUN_THIS_FIRST_ADMIN_V3_FIX.sql now converts photos.sort_order to bigint safely.
+
+Important:
+- If old upload attempt put images into Supabase Storage but failed to insert records into the photos table, those old images cannot automatically appear as album photos. Re-upload those photos once after applying this update.
+- Run backend/supabase/RUN_THIS_FIRST_ADMIN_V3_FIX.sql or backend/supabase/schema.sql in Supabase SQL Editor after replacing files.

@@ -1,0 +1,28 @@
+STUDIO PIXCURA ADMIN V3 FIXED
+
+Main fixes:
+1. Frontend no longer uses Supabase nested relationship select queries for albums, packages, bookings, or add-ons.
+2. Category names are merged on the frontend using category_id, so dropdowns and labels still work even when Supabase relationship cache is not refreshed.
+3. schema.sql now safely adds missing Admin V2/V3 columns:
+   - packages.grade
+   - packages.display_order
+   - packages.base_price
+   - packages.price
+   - packages.print_photo_enabled
+   - packages.print_photo_price
+   - packages.album_book_enabled
+   - packages.album_book_price
+   - albums.package_id
+   - albums.location
+   - albums.album_price
+   - bookings.priority
+   - site settings columns
+4. schema.sql safely adds missing foreign key constraints as NOT VALID to avoid old messy data blocking migration.
+5. seed.sql adds default categories, packages, add-ons, sample albums, and sample photo rows.
+6. Build test passed with npm run build.
+
+After replacing files:
+1. Copy old frontend/.env.local into the new frontend folder.
+2. Run backend/supabase/schema.sql in Supabase SQL Editor.
+3. Run backend/supabase/seed.sql in Supabase SQL Editor.
+4. Restart frontend with npm.cmd run dev.

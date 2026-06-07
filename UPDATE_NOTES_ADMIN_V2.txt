@@ -1,0 +1,49 @@
+STUDIO PIXCURA ADMIN V2 UPDATE
+
+What changed:
+1. Admin sidebar now has: Dashboard, Albums, Packages, Bookings, Contact / Site.
+2. Categories and Photos are now managed inside the Albums tab.
+3. Albums tab now supports:
+   - Album/customer name
+   - Category dropdown
+   - + button to add new category
+   - Location
+   - Shoot date
+   - Album price
+   - Description
+   - Cover photo upload
+   - Multiple album photo upload from PC
+   - Automatic photo count in album list
+   - Search and sort by name, category, price range, date, month, year, photo count
+4. Packages tab now supports:
+   - Category
+   - Package grade: Basic, Standard, Signature, Pro, Premium, Luxury
+   - Package name, price, duration, deliverables
+   - Optional photo print price
+   - Optional album book price
+   - + Add-on creation
+5. Bookings tab now supports:
+   - Bookings from website
+   - Sort/filter by date, type, price, status, priority, month, year
+   - Priority control: normal, urgent, high, low
+6. Dashboard now shows:
+   - Pending booking notifications
+   - Album/photo/package/booking counts
+   - Booking value overview
+   - Latest bookings and albums
+7. Contact / Site tab added:
+   - Studio name, tagline, WhatsApp, phone, email, Facebook, Instagram
+   - About page text
+   - Site copyright note
+
+IMPORTANT SETUP AFTER REPLACING FILES:
+1. Supabase Dashboard > SQL Editor > run backend/supabase/schema.sql again.
+2. Then run backend/supabase/seed.sql again.
+3. Restart frontend:
+   cd "C:\Users\Ange\Downloads\STUDIO PIXCURA WEBSITE\studio-pixcura-website\frontend"
+   npm.cmd run dev
+
+Admin URL:
+http://localhost:5173/#/admin/login
+
+If you get a Supabase error about missing columns/table, schema.sql was not run after this update.

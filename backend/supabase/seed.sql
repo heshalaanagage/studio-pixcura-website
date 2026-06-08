@@ -1,6 +1,6 @@
 -- Studio Pixcura Admin V3 seed data
 -- Run after backend/supabase/schema.sql.
--- Safe to run again. It adds default categories, packages, add-ons, and sample albums.
+-- Safe to run again. It adds default categories, packages, add-ons, and editable home settings. It does not add sample albums.
 
 -- Categories
 insert into public.categories (name, slug, description, image_url)
@@ -58,50 +58,15 @@ from (
 ) as v(name, description, price, is_print_option)
 where not exists (select 1 from public.addons a where lower(a.name) = lower(v.name));
 
--- Sample albums for each category. These help you see the final layout immediately.
-insert into public.albums (
-  category_id, package_id, title, slug, description, location, album_price,
-  cover_image_url, shoot_date, is_featured, is_published
-)
-select c.id, p.id, v.title, v.slug, v.description, v.location, v.album_price,
-       v.cover_image_url, v.shoot_date::date, v.is_featured, true
-from (
-  values
-    ('birthday-shoot', 'Birthday Premium', 'Nishadi', 'nishadi', 'A soft birthday shoot with warm details and elegant styling.', 'Colombo', 25000::numeric, 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80', '2026-05-01', true),
-    ('graduation', 'Graduation Standard', 'Lakmini Wasana Graduation', 'lakmini-wasana-graduation', 'A proud graduation story captured with clean timeless elegance.', 'BMICH', 22000::numeric, 'https://images.unsplash.com/photo-1627556704290-2b1f5853ff78?auto=format&fit=crop&w=1200&q=80', '2026-05-12', true),
-    ('wedding', 'Wedding Standard', 'Kavindu & Tharushi Wedding', 'kavindu-tharushi-wedding', 'Romantic wedding memories with soft luxury details.', 'Colombo', 65000::numeric, 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80', '2026-04-20', true),
-    ('portrait', 'Portrait Basic', 'Moody Portrait Session', 'moody-portrait-session', 'Minimal luxury portraits with cinematic shadows.', 'Outdoor', 15000::numeric, 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80', '2026-04-10', true),
-    ('engagement', 'Engagement Signature', 'Dinithi & Akila Engagement', 'dinithi-akila-engagement', 'Soft romantic engagement session with elegant tones.', 'Galle Face', 30000::numeric, 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80', '2026-03-22', false),
-    ('preshoot', 'Preshoot Pro', 'Sahan & Iresha Preshoot', 'sahan-iresha-preshoot', 'Outdoor cinematic preshoot story with natural light.', 'Kandy', 45000::numeric, 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80', '2026-03-02', false),
-    ('events', 'Event Coverage', 'Corporate Event Coverage', 'corporate-event-coverage', 'Professional event coverage with clean documentary style.', 'Colombo', 20000::numeric, 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80', '2026-02-14', false)
-) as v(category_slug, package_name, title, slug, description, location, album_price, cover_image_url, shoot_date, is_featured)
-join public.categories c on c.slug = v.category_slug
-left join public.packages p on lower(p.name) = lower(v.package_name)
-where not exists (select 1 from public.albums a where a.slug = v.slug);
-
--- Sample photo rows for photo count and album detail preview.
-insert into public.photos (album_id, image_url, caption, sort_order, is_visible)
-select a.id, v.image_url, v.caption, v.sort_order, true
-from (
-  values
-    ('nishadi', 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80', 'Birthday frame 01', 1),
-    ('nishadi', 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80', 'Birthday frame 02', 2),
-    ('lakmini-wasana-graduation', 'https://images.unsplash.com/photo-1627556704290-2b1f5853ff78?auto=format&fit=crop&w=1200&q=80', 'Graduation frame 01', 1),
-    ('lakmini-wasana-graduation', 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80', 'Graduation frame 02', 2),
-    ('kavindu-tharushi-wedding', 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80', 'Wedding frame 01', 1),
-    ('moody-portrait-session', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80', 'Portrait frame 01', 1),
-    ('dinithi-akila-engagement', 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80', 'Engagement frame 01', 1),
-    ('sahan-iresha-preshoot', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80', 'Preshoot frame 01', 1),
-    ('corporate-event-coverage', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80', 'Event frame 01', 1)
-) as v(album_slug, image_url, caption, sort_order)
-join public.albums a on a.slug = v.album_slug
-where not exists (
-  select 1 from public.photos p where p.album_id = a.id and p.image_url = v.image_url
-);
+-- Sample albums are intentionally not inserted in this release.
+-- Use Admin → Albums to create only the albums you want to show.
 
 insert into public.site_settings (
   id, studio_name, tagline, whatsapp_number, phone_alt, email,
-  facebook_url, instagram_url, about_title, about_text, address, copyright_text
+  facebook_url, instagram_url, about_title, about_text, address,
+  home_hero_eyebrow, home_hero_title, home_hero_text, home_hero_image_url,
+  home_photographer_title, home_photographer_text, home_photographer_image_url,
+  copyright_text
 )
 values (
   1,
@@ -115,6 +80,13 @@ values (
   'Studio Pixcura is built for memories that deserve to stay timeless.',
   'Studio Pixcura is a creative photography brand focused on cinematic, elegant, and emotionally rich photoshoots. We capture portraits, graduation stories, birthdays, weddings, events, engagements, and preshoots with careful attention to light, composition, and storytelling.',
   'Sri Lanka',
+  'Premium Photography • Sri Lanka',
+  'Every frame has a story — captured with elegance, emotion, and cinematic light.',
+  'Studio Pixcura creates timeless portraits, graduation stories, birthdays, weddings, events, engagements, and preshoots with a fresh luxury mood.',
+  null,
+  'Meet the photographer behind Studio Pixcura',
+  'Add your personal photographer introduction from Admin → Home Content.',
+  null,
   '© Studio Pixcura | Heshala Angage | Gayashan Perera. All images are copyrighted.'
 )
 on conflict (id) do update set
@@ -128,6 +100,13 @@ on conflict (id) do update set
   about_title = excluded.about_title,
   about_text = excluded.about_text,
   address = excluded.address,
+  home_hero_eyebrow = coalesce(public.site_settings.home_hero_eyebrow, excluded.home_hero_eyebrow),
+  home_hero_title = coalesce(public.site_settings.home_hero_title, excluded.home_hero_title),
+  home_hero_text = coalesce(public.site_settings.home_hero_text, excluded.home_hero_text),
+  home_hero_image_url = coalesce(public.site_settings.home_hero_image_url, excluded.home_hero_image_url),
+  home_photographer_title = coalesce(public.site_settings.home_photographer_title, excluded.home_photographer_title),
+  home_photographer_text = coalesce(public.site_settings.home_photographer_text, excluded.home_photographer_text),
+  home_photographer_image_url = coalesce(public.site_settings.home_photographer_image_url, excluded.home_photographer_image_url),
   copyright_text = excluded.copyright_text,
   updated_at = now();
 

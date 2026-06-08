@@ -16,6 +16,7 @@ export default function AdminLayout() {
         <NavLink to="/admin">Dashboard</NavLink>
         <NavLink to="/admin/albums">Albums</NavLink>
         <NavLink to="/admin/packages">Packages</NavLink>
+        <NavLink to="/admin/home-content">Home Content</NavLink>
         <NavLink to="/admin/bookings">Bookings</NavLink>
         <NavLink to="/admin/settings">Contact / Site</NavLink>
         <button type="button" onClick={logout}>Logout</button>

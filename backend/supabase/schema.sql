@@ -128,6 +128,18 @@ create table if not exists public.site_settings (
   constraint site_settings_singleton check (id = 1)
 );
 
+create table if not exists public.home_photos (
+  id uuid primary key default gen_random_uuid(),
+  section text default 'home_gallery',
+  title text,
+  subtitle text,
+  image_url text not null,
+  sort_order integer default 0,
+  is_active boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- =========================
 -- 2) SAFE COLUMN MIGRATIONS
 -- =========================
@@ -212,6 +224,23 @@ alter table public.booking_addons add column if not exists addon_id uuid;
 alter table public.booking_addons add column if not exists quantity integer default 1;
 alter table public.booking_addons add column if not exists created_at timestamptz default now();
 
+alter table public.site_settings add column if not exists home_hero_eyebrow text;
+alter table public.site_settings add column if not exists home_hero_title text;
+alter table public.site_settings add column if not exists home_hero_text text;
+alter table public.site_settings add column if not exists home_hero_image_url text;
+alter table public.site_settings add column if not exists home_photographer_title text;
+alter table public.site_settings add column if not exists home_photographer_text text;
+alter table public.site_settings add column if not exists home_photographer_image_url text;
+
+alter table public.home_photos add column if not exists section text default 'home_gallery';
+alter table public.home_photos add column if not exists title text;
+alter table public.home_photos add column if not exists subtitle text;
+alter table public.home_photos add column if not exists image_url text;
+alter table public.home_photos add column if not exists sort_order integer default 0;
+alter table public.home_photos add column if not exists is_active boolean default true;
+alter table public.home_photos add column if not exists created_at timestamptz default now();
+alter table public.home_photos add column if not exists updated_at timestamptz default now();
+
 -- Fill older rows and keep aliases in sync.
 update public.categories set slug = lower(regexp_replace(coalesce(slug, name, id::text), '[^a-zA-Z0-9]+', '-', 'g')) where slug is null or slug = '';
 update public.packages set grade = coalesce(nullif(grade, ''), 'Basic');
@@ -226,6 +255,7 @@ update public.photos set sort_order = coalesce(sort_order, 0), is_visible = coal
 update public.addons set price = coalesce(price, 0), is_print_option = coalesce(is_print_option, false), is_active = coalesce(is_active, true);
 update public.bookings set priority = coalesce(nullif(priority, ''), 'normal'), status = coalesce(nullif(status, ''), 'pending'), estimated_total = coalesce(estimated_total, 0);
 update public.booking_addons set quantity = coalesce(quantity, 1);
+update public.home_photos set section = coalesce(nullif(section, ''), 'home_gallery'), sort_order = coalesce(sort_order, 0), is_active = coalesce(is_active, true);
 
 -- =========================
 -- 3) UNIQUE INDEXES + FOREIGN KEYS
@@ -339,7 +369,10 @@ create trigger on_auth_user_created
 
 insert into public.site_settings (
   id, studio_name, tagline, whatsapp_number, phone_alt, email,
-  facebook_url, instagram_url, about_title, about_text, address, copyright_text
+  facebook_url, instagram_url, about_title, about_text, address,
+  home_hero_eyebrow, home_hero_title, home_hero_text, home_hero_image_url,
+  home_photographer_title, home_photographer_text, home_photographer_image_url,
+  copyright_text
 )
 values (
   1,
@@ -353,6 +386,13 @@ values (
   'Studio Pixcura is built for memories that deserve to stay timeless.',
   'Studio Pixcura is a creative photography brand focused on cinematic, elegant, and emotionally rich photoshoots. We capture portraits, graduation stories, birthdays, weddings, events, engagements, and preshoots with careful attention to light, composition, and storytelling.',
   'Sri Lanka',
+  'Premium Photography • Sri Lanka',
+  'Every frame has a story — captured with elegance, emotion, and cinematic light.',
+  'Studio Pixcura creates timeless portraits, graduation stories, birthdays, weddings, events, engagements, and preshoots with a fresh luxury mood.',
+  null,
+  'Meet the photographer behind Studio Pixcura',
+  'Add your personal photographer introduction from Admin → Home Content.',
+  null,
   '© Studio Pixcura | Heshala Angage | Gayashan Perera. All images are copyrighted.'
 )
 on conflict (id) do update set
@@ -366,6 +406,13 @@ on conflict (id) do update set
   about_title = excluded.about_title,
   about_text = excluded.about_text,
   address = excluded.address,
+  home_hero_eyebrow = coalesce(public.site_settings.home_hero_eyebrow, excluded.home_hero_eyebrow),
+  home_hero_title = coalesce(public.site_settings.home_hero_title, excluded.home_hero_title),
+  home_hero_text = coalesce(public.site_settings.home_hero_text, excluded.home_hero_text),
+  home_hero_image_url = coalesce(public.site_settings.home_hero_image_url, excluded.home_hero_image_url),
+  home_photographer_title = coalesce(public.site_settings.home_photographer_title, excluded.home_photographer_title),
+  home_photographer_text = coalesce(public.site_settings.home_photographer_text, excluded.home_photographer_text),
+  home_photographer_image_url = coalesce(public.site_settings.home_photographer_image_url, excluded.home_photographer_image_url),
   copyright_text = excluded.copyright_text,
   updated_at = now();
 
@@ -382,6 +429,7 @@ alter table public.addons enable row level security;
 alter table public.bookings enable row level security;
 alter table public.booking_addons enable row level security;
 alter table public.site_settings enable row level security;
+alter table public.home_photos enable row level security;
 
 -- Drop old and current policies to keep this file rerunnable.
 drop policy if exists "Profiles can be read by owner or admin" on public.profiles;
@@ -417,6 +465,10 @@ drop policy if exists "Admin can delete booking addons" on public.booking_addons
 drop policy if exists "Public can read site settings" on public.site_settings;
 drop policy if exists "Admin can insert site settings" on public.site_settings;
 drop policy if exists "Admin can update site settings" on public.site_settings;
+drop policy if exists "Public can read active home photos" on public.home_photos;
+drop policy if exists "Admin can insert home photos" on public.home_photos;
+drop policy if exists "Admin can update home photos" on public.home_photos;
+drop policy if exists "Admin can delete home photos" on public.home_photos;
 
 create policy "Profiles can be read by owner or admin" on public.profiles for select using (id = auth.uid() or public.is_admin());
 create policy "Profiles can be updated by admin" on public.profiles for update using (public.is_admin()) with check (public.is_admin());
@@ -466,6 +518,11 @@ create policy "Public can read site settings" on public.site_settings for select
 create policy "Admin can insert site settings" on public.site_settings for insert with check (public.is_admin());
 create policy "Admin can update site settings" on public.site_settings for update using (public.is_admin()) with check (public.is_admin());
 
+create policy "Public can read active home photos" on public.home_photos for select using (coalesce(is_active, true) = true or public.is_admin());
+create policy "Admin can insert home photos" on public.home_photos for insert with check (public.is_admin());
+create policy "Admin can update home photos" on public.home_photos for update using (public.is_admin()) with check (public.is_admin());
+create policy "Admin can delete home photos" on public.home_photos for delete using (public.is_admin());
+
 -- =========================
 -- 7) STORAGE
 -- =========================
@@ -483,6 +540,9 @@ create policy "Public can read pixcura photos" on storage.objects for select usi
 create policy "Admin can upload pixcura photos" on storage.objects for insert with check (bucket_id = 'pixcura-photos' and public.is_admin());
 create policy "Admin can update pixcura photos" on storage.objects for update using (bucket_id = 'pixcura-photos' and public.is_admin()) with check (bucket_id = 'pixcura-photos' and public.is_admin());
 create policy "Admin can delete pixcura photos" on storage.objects for delete using (bucket_id = 'pixcura-photos' and public.is_admin());
+
+create index if not exists home_photos_section_idx on public.home_photos(section);
+create index if not exists home_photos_sort_idx on public.home_photos(sort_order);
 
 -- Force PostgREST/Supabase API to reload schema cache after new columns/foreign keys.
 notify pgrst, 'reload schema';

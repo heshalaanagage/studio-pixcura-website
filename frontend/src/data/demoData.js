@@ -185,5 +185,34 @@ export const demoSiteSettings = {
   address: 'Sri Lanka',
   about_title: 'Studio Pixcura is built for memories that deserve to stay timeless.',
   about_text: 'Studio Pixcura is a creative photography brand focused on cinematic, elegant, and emotionally rich photoshoots. We capture portraits, graduation stories, birthdays, weddings, events, engagements, and preshoots with careful attention to light, composition, and storytelling.',
+  home_hero_eyebrow: 'Premium Photography • Sri Lanka',
+  home_hero_title: 'Every frame has a story — captured with elegance, emotion, and cinematic light.',
+  home_hero_text: 'Studio Pixcura creates timeless portraits, graduation stories, birthdays, weddings, events, engagements, and preshoots with a fresh luxury mood.',
+  home_hero_image_url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
+  home_photographer_title: 'Meet the photographer behind Studio Pixcura',
+  home_photographer_text: 'I capture emotional, clean, cinematic frames with careful attention to light, composition, and the story behind every person.',
+  home_photographer_image_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1200&q=80',
   copyright_text: '© Studio Pixcura | Heshala Angage | Gayashan Perera. All images are copyrighted.'
 };
+
+
+export const demoHomePhotos = [
+  {
+    id: 'home-demo-1',
+    section: 'home_gallery',
+    title: 'Cinematic graduation frame',
+    subtitle: 'A sample frame for the customizable home gallery.',
+    image_url: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80',
+    sort_order: 1,
+    is_active: true
+  },
+  {
+    id: 'home-demo-2',
+    section: 'home_gallery',
+    title: 'Elegant portrait frame',
+    subtitle: 'Replace these images from Admin → Home Content.',
+    image_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80',
+    sort_order: 2,
+    is_active: true
+  }
+];

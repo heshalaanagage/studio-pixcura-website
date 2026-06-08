@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -16,11 +17,31 @@ import ManageAlbums from './pages/admin/ManageAlbums';
 import ManagePackages from './pages/admin/ManagePackages';
 import ManageBookings from './pages/admin/ManageBookings';
 import ManageSiteSettings from './pages/admin/ManageSiteSettings';
+import ManageHomeContent from './pages/admin/ManageHomeContent';
+
+const getInitialTheme = () => {
+  if (typeof window === 'undefined') return 'dark';
+  const saved = window.localStorage.getItem('pixcura-theme');
+  if (saved === 'light' || saved === 'dark') return saved;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+};
 
 export default function App() {
+  const [theme, setTheme] = useState(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme;
+    window.localStorage.setItem('pixcura-theme', theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  }
+
   return (
     <div className="app-shell">
-      <Navbar />
+      <Navbar theme={theme} onToggleTheme={toggleTheme} />
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -35,6 +56,7 @@ export default function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="albums" element={<ManageAlbums />} />
               <Route path="packages" element={<ManagePackages />} />
+              <Route path="home-content" element={<ManageHomeContent />} />
               <Route path="bookings" element={<ManageBookings />} />
               <Route path="settings" element={<ManageSiteSettings />} />
             </Route>

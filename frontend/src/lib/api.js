@@ -1,5 +1,5 @@
 import { supabase, isSupabaseReady } from './supabaseClient';
-import { demoAddons, demoAlbums, demoCategories, demoPackages, demoPhotos, demoSiteSettings } from '../data/demoData';
+import { demoAddons, demoAlbums, demoCategories, demoPackages, demoPhotos, demoSiteSettings, demoHomePhotos } from '../data/demoData';
 import { safeFileName, slugify } from './helpers';
 
 function requireSupabase() {
@@ -105,6 +105,26 @@ function normalizeAddon(addon, categoryMap = new Map()) {
     price: Number(addon.price || 0),
     categories: category ? { name: category.name, slug: category.slug } : null
   };
+}
+
+function normalizeHomePhoto(photo) {
+  if (!photo) return null;
+  return {
+    ...photo,
+    sort_order: Number(photo.sort_order || 0),
+    is_active: photo.is_active !== false
+  };
+}
+
+function sortHomePhotos(list) {
+  return [...(list || [])]
+    .map(normalizeHomePhoto)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const order = Number(a.sort_order || 0) - Number(b.sort_order || 0);
+      if (order !== 0) return order;
+      return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+    });
 }
 
 function normalizeAlbum(album, { categoryMap = new Map(), packageMap = new Map(), photosByAlbum = new Map() } = {}) {
@@ -306,11 +326,98 @@ export async function adminUpdateSiteSettings(form) {
     about_title: form.about_title || null,
     about_text: form.about_text || null,
     address: form.address || null,
+    home_hero_eyebrow: form.home_hero_eyebrow || null,
+    home_hero_title: form.home_hero_title || null,
+    home_hero_text: form.home_hero_text || null,
+    home_hero_image_url: form.home_hero_image_url || null,
+    home_photographer_title: form.home_photographer_title || null,
+    home_photographer_text: form.home_photographer_text || null,
+    home_photographer_image_url: form.home_photographer_image_url || null,
     copyright_text: form.copyright_text || null,
     updated_at: new Date().toISOString()
   };
   const { error } = await client.from('site_settings').upsert(payload, { onConflict: 'id' });
   throwIfError(error);
+}
+
+export async function getHomePhotos({ section = '', admin = false } = {}) {
+  if (!isSupabaseReady) return demoHomePhotos;
+  let query = supabase.from('home_photos').select('*');
+  if (section) query = query.eq('section', section);
+  if (!admin) query = query.eq('is_active', true);
+  const { data, error } = await query;
+  throwIfError(error);
+  return sortHomePhotos(data || []);
+}
+
+export async function getHomeContent() {
+  if (!isSupabaseReady) {
+    return {
+      settings: demoSiteSettings,
+      homePhotos: demoHomePhotos,
+      galleryPhotos: demoHomePhotos.filter((photo) => photo.section === 'home_gallery'),
+      heroPhoto: demoSiteSettings.home_hero_image_url || '',
+      photographerPhoto: demoSiteSettings.home_photographer_image_url || ''
+    };
+  }
+  const [settings, homePhotos] = await Promise.all([
+    getSiteSettings(),
+    getHomePhotos({ admin: false })
+  ]);
+  return {
+    settings,
+    homePhotos,
+    galleryPhotos: homePhotos.filter((photo) => photo.section === 'home_gallery'),
+    heroPhoto: settings.home_hero_image_url || '',
+    photographerPhoto: settings.home_photographer_image_url || ''
+  };
+}
+
+export async function adminHomePhotos() {
+  return getHomePhotos({ admin: true });
+}
+
+export async function adminUpsertHomePhoto(form, file = null) {
+  const client = requireSupabase();
+  let imageUrl = form.image_url || null;
+  if (file) imageUrl = await uploadPublicImage(file, `home/${form.section || 'gallery'}`);
+  if (!imageUrl) throw new Error('Please upload or enter a home photo URL.');
+  const payload = {
+    section: form.section || 'home_gallery',
+    title: form.title || null,
+    subtitle: form.subtitle || null,
+    image_url: imageUrl,
+    sort_order: Number(form.sort_order || 0),
+    is_active: form.is_active !== false,
+    updated_at: new Date().toISOString()
+  };
+  const query = form.id
+    ? client.from('home_photos').update(payload).eq('id', form.id).select('*').single()
+    : client.from('home_photos').insert(payload).select('*').single();
+  const { data, error } = await query;
+  throwIfError(error);
+  return normalizeHomePhoto(data);
+}
+
+export async function adminDeleteHomePhoto(id) {
+  const client = requireSupabase();
+  const { error } = await client.from('home_photos').delete().eq('id', id);
+  throwIfError(error);
+}
+
+export async function adminUpdateCategoryImage(categoryId, file) {
+  const client = requireSupabase();
+  if (!categoryId) throw new Error('Category ID is missing.');
+  if (!file) throw new Error('Please select a category image.');
+  const imageUrl = await uploadPublicImage(file, `home/categories/${categoryId}`);
+  const { data, error } = await client
+    .from('categories')
+    .update({ image_url: imageUrl })
+    .eq('id', categoryId)
+    .select('*')
+    .single();
+  throwIfError(error);
+  return normalizeCategory(data);
 }
 
 export async function createBooking(payload, selectedAddonIds = []) {

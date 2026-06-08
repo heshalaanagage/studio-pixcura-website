@@ -10,7 +10,7 @@ const navItems = [
   { to: '/contact', label: 'Contact' }
 ];
 
-export default function Navbar() {
+export default function Navbar({ theme = 'dark', onToggleTheme }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -24,9 +24,22 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <button className="menu-btn" type="button" onClick={() => setOpen((value) => !value)}>
-          {open ? 'Close' : 'Menu'}
-        </button>
+        <div className="nav-actions">
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={onToggleTheme}
+            aria-label="Toggle dark and light mode"
+            title="Toggle theme"
+          >
+            <span>{theme === 'dark' ? '☀' : '☾'}</span>
+            <small>{theme === 'dark' ? 'Light' : 'Dark'}</small>
+          </button>
+
+          <button className="menu-btn" type="button" onClick={() => setOpen((value) => !value)}>
+            {open ? 'Close' : 'Menu'}
+          </button>
+        </div>
 
         <div className={`nav-links ${open ? 'show' : ''}`}>
           {navItems.map((item) => (
